@@ -1,0 +1,51 @@
+scapy>=2.5.0
+pandas>=2.0.0
+plotly>=5.14.0
+rich>=13.0.0
+tabulate>=0.9.0
+matplotlib>=3.7.0
+networkx>=3.1
+kaleido>=0.2.1
+```
+
+---
+
+## **Final Project Structure:**
+```
+py_proj/
+│
+├── venv/                              # Virtual environment
+│
+├── config/                            # ⚙️ Configuration
+│   └── settings.json                  # Settings file
+│
+├── src/                               # 📦 Source code
+│   ├── analyzer.py
+│   ├── report_generator.py
+│   ├── visualizer.py
+│   ├── html_dashboard.py
+│   └── advanced_analyzer.py
+│
+├── output/                            # 📁 All generated files
+│   ├── dashboards/                    # 🌐 HTML dashboards
+│   │   └── dashboard.html
+│   ├── visualizations/                # 📊 Charts (HTML & PNG)
+│   │   ├── protocol_distribution.html
+│   │   ├── protocol_distribution.png
+│   │   ├── top_talkers.html
+│   │   ├── top_talkers.png
+│   │   └── ...
+│   ├── reports/                       # 📄 Text reports
+│   │   └── summary_report.txt
+│   └── exports/                       # 💾 Data exports
+│       ├── report.csv
+│       └── file_formatted.txt
+│
+├── docs/                              # 📚 Documentation (for your report)
+│   └── (you'll add your written report here)
+│
+├── traffic.pcap                       # 📦 Input PCAP file
+├── main.py                            # 🎯 Main script
+├── README.md                          # 📖 Project documentation
+├── requirements.txt                   # 📋 Dependencies
+└── .gitignore                         # 🚫 Git ignore file (optional)

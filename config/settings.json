@@ -1,0 +1,24 @@
+{
+    "input": {
+        "pcap_file": "traffic.pcap"
+    },
+    "output": {
+        "base_directory": "output",
+        "dashboards_dir": "output/dashboards",
+        "visualizations_dir": "output/visualizations",
+        "reports_dir": "output/reports",
+        "exports_dir": "output/exports"
+    },
+    "thresholds": {
+        "suspicious_bytes": 1048576,
+        "use_adaptive_threshold": false,
+        "adaptive_factor": 5,
+        "port_scan_threshold": 10,
+        "syn_flood_threshold": 50,
+        "icmp_flood_threshold": 100
+    },
+    "display": {
+        "top_talkers_count": 15,
+        "show_terminal_summary": true
+    }
+}
