@@ -1,6 +1,19 @@
-# NetScope - Network Traffic Analyzer
+# 🌐 NetScope - Advanced Network Traffic Analyzer
 
-Advanced network traffic analysis tool for PCAP files.
+<div align="center">
+
+![NetScope Logo](https://img.shields.io/badge/NetScope-Network%20Analyzer-blueviolet?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
+
+**A powerful, visual network traffic analysis tool built with Python**
+
+[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Demo](#-demo) • [Documentation](#-documentation)
+
+</div>
+
+---
 
 ## 🎯 What Does This Tool Do?
 
@@ -207,12 +220,7 @@ Use only on your own networks or public sample files.
 
 ---
 
-## 📞 Support
-
-For questions about this project, refer to the documentation in `docs/` folder.
-
----
-
 ## 📄 License
+
 
 Educational Project - For Learning Purposes
