@@ -1,15 +1,12 @@
-# html_dashboard.py
+# html_dashboard.py - Futuristic Cyberpunk Edition
 
 import os
 import json
 from datetime import datetime
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
 
 def create_dashboard(df, main_proto_counter, full_proto_counter, ip_traffic_counter, 
                     suspicious_ips, pcap_file, output_dir="reports"):
-    """Generate a beautiful, comprehensive HTML dashboard"""
+    """Generate a futuristic cyberpunk-style HTML dashboard"""
     
     os.makedirs(output_dir, exist_ok=True)
     
@@ -23,37 +20,46 @@ def create_dashboard(df, main_proto_counter, full_proto_counter, ip_traffic_coun
     # Get timestamp range
     if not df.empty and 'timestamp' in df.columns:
         try:
-            # Convert to float to handle Decimal objects from Scapy
             min_time = float(df['timestamp'].min())
             max_time = float(df['timestamp'].max())
             start_time = datetime.fromtimestamp(min_time).strftime('%Y-%m-%d %H:%M:%S')
             end_time = datetime.fromtimestamp(max_time).strftime('%Y-%m-%d %H:%M:%S')
             duration = max_time - min_time
         except:
-            start_time = "N/A"
-            end_time = "N/A"
-            duration = 0
+            start_time, end_time, duration = "N/A", "N/A", 0
     else:
-        start_time = "N/A"
-        end_time = "N/A"
-        duration = 0
+        start_time, end_time, duration = "N/A", "N/A", 0
     
-    # Generate embedded charts
+    # Generate charts
     protocol_chart = generate_protocol_pie_chart(main_proto_counter)
     top_talkers_chart = generate_top_talkers_chart(ip_traffic_counter)
     packet_size_chart = generate_packet_size_chart(df)
     protocol_bar_chart = generate_protocol_bar_chart(main_proto_counter)
     
-    # Generate HTML
     html_content = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NetScope - Network Traffic Analysis Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>NetScope // Cyber Analysis Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
+        :root {{
+            --primary: #00f0ff;
+            --secondary: #ff00ff;
+            --accent: #00ff88;
+            --warning: #ffaa00;
+            --danger: #ff0055;
+            --dark: #0a0a0f;
+            --darker: #050508;
+            --card-bg: rgba(10, 15, 25, 0.85);
+            --border-glow: rgba(0, 240, 255, 0.3);
+            --text: #e0e0e0;
+            --text-dim: #6a7a8a;
+        }}
+        
         * {{
             margin: 0;
             padding: 0;
@@ -61,45 +67,113 @@ def create_dashboard(df, main_proto_counter, full_proto_counter, ip_traffic_coun
         }}
         
         body {{
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--darker);
+            color: var(--text);
             min-height: 100vh;
-            padding: 20px;
+            overflow-x: hidden;
+        }}
+        
+        /* Animated Background */
+        .cyber-bg {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                linear-gradient(180deg, var(--darker) 0%, #0a0a1a 50%, var(--darker) 100%);
+        }}
+        
+        .cyber-bg::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 240, 255, 0.03) 2px,
+                    rgba(0, 240, 255, 0.03) 4px
+                );
+            pointer-events: none;
+            animation: scanlines 8s linear infinite;
+        }}
+        
+        @keyframes scanlines {{
+            0% {{ transform: translateY(0); }}
+            100% {{ transform: translateY(100px); }}
+        }}
+        
+        .cyber-bg::after {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(0, 240, 255, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }}
+        
+        /* Grid Lines Background */
+        .grid-overlay {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            animation: gridMove 20s linear infinite;
+        }}
+        
+        @keyframes gridMove {{
+            0% {{ transform: perspective(500px) rotateX(60deg) translateY(0); }}
+            100% {{ transform: perspective(500px) rotateX(60deg) translateY(50px); }}
         }}
         
         .container {{
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
+            padding: 20px;
+            position: relative;
         }}
         
-        /* Header Section */
+        /* Header */
         .header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px 50px;
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(255, 0, 255, 0.1) 100%);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(20px);
         }}
         
         .header::before {{
             content: '';
             position: absolute;
             top: -50%;
-            right: -50%;
+            left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: pulse 15s ease-in-out infinite;
+            background: conic-gradient(from 0deg, transparent, var(--primary), transparent, var(--secondary), transparent);
+            animation: rotate 10s linear infinite;
+            opacity: 0.1;
         }}
         
-        @keyframes pulse {{
-            0%, 100% {{ transform: scale(1); }}
-            50% {{ transform: scale(1.1); }}
+        @keyframes rotate {{
+            100% {{ transform: rotate(360deg); }}
         }}
         
         .header-content {{
@@ -110,77 +184,99 @@ def create_dashboard(df, main_proto_counter, full_proto_counter, ip_traffic_coun
         .logo {{
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 20px;
+            margin-bottom: 25px;
         }}
         
         .logo-icon {{
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
-            backdrop-filter: blur(10px);
+            font-size: 40px;
+            box-shadow: 
+                0 0 30px rgba(0, 240, 255, 0.5),
+                0 0 60px rgba(255, 0, 255, 0.3),
+                inset 0 0 30px rgba(255, 255, 255, 0.1);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }}
+        
+        @keyframes pulse-glow {{
+            0%, 100% {{ box-shadow: 0 0 30px rgba(0, 240, 255, 0.5), 0 0 60px rgba(255, 0, 255, 0.3); }}
+            50% {{ box-shadow: 0 0 50px rgba(0, 240, 255, 0.8), 0 0 100px rgba(255, 0, 255, 0.5); }}
         }}
         
         .logo h1 {{
-            font-size: 42px;
-            font-weight: 800;
-            letter-spacing: -1px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
+            letter-spacing: 4px;
         }}
         
-        .subtitle {{
-            font-size: 18px;
-            opacity: 0.9;
-            font-weight: 300;
-            margin-top: 10px;
+        .tagline {{
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--primary);
+            font-size: 14px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0.8;
         }}
         
-        .analysis-info {{
+        .status-bar {{
             display: flex;
             gap: 40px;
-            margin-top: 30px;
             flex-wrap: wrap;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(0, 240, 255, 0.2);
         }}
         
-        .info-item {{
+        .status-item {{
             display: flex;
             flex-direction: column;
+            gap: 5px;
         }}
         
-        .info-label {{
-            font-size: 12px;
+        .status-label {{
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px;
+            color: var(--text-dim);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.8;
-            margin-bottom: 5px;
+            letter-spacing: 2px;
         }}
         
-        .info-value {{
+        .status-value {{
+            font-family: 'Orbitron', sans-serif;
             font-size: 16px;
-            font-weight: 600;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
         }}
         
-        /* Stats Cards */
+        /* Stats Grid */
         .stats-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
-            padding: 40px 50px;
-            background: #f8f9fa;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
         }}
         
         .stat-card {{
-            background: white;
-            padding: 30px;
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 240, 255, 0.2);
             border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-            transition: all 0.3s ease;
+            padding: 25px;
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }}
         
         .stat-card::before {{
@@ -188,142 +284,160 @@ def create_dashboard(df, main_proto_counter, full_proto_counter, ip_traffic_coun
             position: absolute;
             top: 0;
             left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
         }}
         
         .stat-card:hover {{
             transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+            box-shadow: 
+                0 10px 40px rgba(0, 240, 255, 0.2),
+                0 0 20px rgba(0, 240, 255, 0.1);
         }}
         
         .stat-icon {{
-            font-size: 36px;
+            font-size: 32px;
             margin-bottom: 15px;
+            filter: drop-shadow(0 0 10px var(--primary));
         }}
         
         .stat-label {{
-            font-size: 13px;
-            color: #6c757d;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px;
+            color: var(--text-dim);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            margin-bottom: 10px;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
         }}
         
         .stat-value {{
-            font-size: 32px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
             font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }}
         
         .stat-subvalue {{
-            font-size: 14px;
-            color: #718096;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 5px;
         }}
         
-        /* Content Section */
-        .content {{
-            padding: 40px 50px;
-        }}
-        
+        /* Section Styling */
         .section {{
-            margin-bottom: 50px;
+            margin-bottom: 30px;
         }}
         
         .section-title {{
-            font-size: 24px;
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 25px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }}
         
         .section-title::before {{
             content: '';
             width: 4px;
-            height: 30px;
-            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            height: 25px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
             border-radius: 2px;
+            box-shadow: 0 0 10px var(--primary);
         }}
         
-        /* Charts */
+        .section-title::after {{
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+        }}
+        
+        /* Charts Grid */
         .charts-grid {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
+            gap: 25px;
+            margin-bottom: 25px;
         }}
         
         .chart-container {{
-            background: white;
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            border-radius: 15px;
             padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-        }}
-        
-        .chart-title {{
-            font-size: 18px;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }}
-        
-        /* Tables */
-        .table-container {{
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            backdrop-filter: blur(10px);
+            position: relative;
             overflow: hidden;
         }}
         
-        table {{
-            width: 100%;
-            border-collapse: collapse;
+        .chart-container::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
         }}
         
-        thead {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }}
-        
-        th {{
-            padding: 18px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }}
-        
-        td {{
-            padding: 16px 18px;
-            border-bottom: 1px solid #e2e8f0;
+        .chart-title {{
+            font-family: 'Share Tech Mono', monospace;
             font-size: 14px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }}
         
-        tr:hover {{
-            background: #f7fafc;
+        .chart-title::before {{
+            content: '>';
+            color: var(--accent);
+            animation: blink 1s infinite;
         }}
         
-        tr:last-child td {{
-            border-bottom: none;
+        @keyframes blink {{
+            0%, 50% {{ opacity: 1; }}
+            51%, 100% {{ opacity: 0; }}
         }}
         
-        /* Security Alerts */
+        /* Alert Box */
         .alert-box {{
-            background: white;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 0, 85, 0.3);
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .alert-box::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--danger), var(--warning));
+            animation: alert-pulse 2s ease-in-out infinite;
+        }}
+        
+        @keyframes alert-pulse {{
+            0%, 100% {{ opacity: 1; }}
+            50% {{ opacity: 0.5; }}
         }}
         
         .alert-item {{
@@ -331,10 +445,10 @@ def create_dashboard(df, main_proto_counter, full_proto_counter, ip_traffic_coun
             align-items: center;
             gap: 15px;
             padding: 15px;
-            background: #fff5f5;
-            border-left: 4px solid #e53e3e;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            background: rgba(255, 0, 85, 0.1);
+            border: 1px solid rgba(255, 0, 85, 0.3);
+            border-radius: 10px;
+            margin-bottom: 12px;
         }}
         
         .alert-item:last-child {{
@@ -343,6 +457,12 @@ def create_dashboard(df, main_proto_counter, full_proto_counter, ip_traffic_coun
         
         .alert-icon {{
             font-size: 24px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }}
+        
+        @keyframes pulse {{
+            0%, 100% {{ transform: scale(1); }}
+            50% {{ transform: scale(1.1); }}
         }}
         
         .alert-text {{
@@ -350,33 +470,99 @@ def create_dashboard(df, main_proto_counter, full_proto_counter, ip_traffic_coun
         }}
         
         .alert-ip {{
-            font-weight: 600;
-            color: #e53e3e;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 16px;
+            color: var(--danger);
+            text-shadow: 0 0 10px var(--danger);
         }}
         
         .alert-details {{
-            font-size: 13px;
-            color: #718096;
+            font-size: 12px;
+            color: var(--text-dim);
             margin-top: 5px;
         }}
         
         .no-alerts {{
             text-align: center;
-            padding: 30px;
-            color: #48bb78;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            padding: 40px;
+            color: var(--accent);
+        }}
+        
+        .no-alerts-icon {{
+            font-size: 60px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 20px var(--accent));
+        }}
+        
+        .no-alerts-text {{
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }}
+        
+        /* Tables */
+        .table-container {{
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }}
+        
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+        }}
+        
+        thead {{
+            background: linear-gradient(90deg, rgba(0, 240, 255, 0.2), rgba(255, 0, 255, 0.2));
+        }}
+        
+        th {{
+            font-family: 'Orbitron', sans-serif;
+            padding: 18px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border-glow);
+        }}
+        
+        td {{
+            padding: 15px 18px;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+            font-size: 14px;
+            font-family: 'Share Tech Mono', monospace;
+        }}
+        
+        tr:hover {{
+            background: rgba(0, 240, 255, 0.05);
+        }}
+        
+        tr:last-child td {{
+            border-bottom: none;
+        }}
+        
+        code {{
+            background: rgba(0, 240, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: var(--primary);
+            font-family: 'Share Tech Mono', monospace;
         }}
         
         /* Footer */
         .footer {{
-            background: #2d3748;
-            color: white;
-            padding: 30px 50px;
+            background: linear-gradient(90deg, rgba(0, 240, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border: 1px solid var(--border-glow);
+            border-radius: 15px;
+            padding: 30px;
             text-align: center;
+            margin-top: 30px;
+            backdrop-filter: blur(10px);
         }}
         
         .footer-content {{
@@ -388,16 +574,22 @@ def create_dashboard(df, main_proto_counter, full_proto_counter, ip_traffic_coun
         }}
         
         .footer-text {{
-            font-size: 14px;
-            opacity: 0.8;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 12px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
         }}
         
         .footer-badge {{
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px 16px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            padding: 10px 20px;
             border-radius: 20px;
-            font-size: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--dark);
         }}
         
         /* Responsive */
@@ -405,36 +597,68 @@ def create_dashboard(df, main_proto_counter, full_proto_counter, ip_traffic_coun
             .charts-grid {{
                 grid-template-columns: 1fr;
             }}
-            
-            .stats-grid {{
-                grid-template-columns: 1fr;
+            .logo h1 {{
+                font-size: 28px;
             }}
-            
-            .header, .content, .footer {{
-                padding: 30px 25px;
+            .status-bar {{
+                gap: 20px;
             }}
         }}
         
-        /* Animations */
-        @keyframes fadeIn {{
-            from {{ opacity: 0; transform: translateY(20px); }}
-            to {{ opacity: 1; transform: translateY(0); }}
+        /* Glitch Effect for Title */
+        .glitch {{
+            position: relative;
         }}
         
-        .stat-card, .chart-container, .table-container, .alert-box {{
-            animation: fadeIn 0.6s ease-out backwards;
+        .glitch::before,
+        .glitch::after {{
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }}
         
-        .stat-card:nth-child(1) {{ animation-delay: 0.1s; }}
-        .stat-card:nth-child(2) {{ animation-delay: 0.2s; }}
-        .stat-card:nth-child(3) {{ animation-delay: 0.3s; }}
-        .stat-card:nth-child(4) {{ animation-delay: 0.4s; }}
-        .stat-card:nth-child(5) {{ animation-delay: 0.5s; }}
-        .stat-card:nth-child(6) {{ animation-delay: 0.6s; }}
+        .glitch::before {{
+            animation: glitch-1 2s infinite linear alternate-reverse;
+            clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+        }}
+        
+        .glitch::after {{
+            animation: glitch-2 3s infinite linear alternate-reverse;
+            clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+        }}
+        
+        @keyframes glitch-1 {{
+            0% {{ transform: translateX(0); }}
+            20% {{ transform: translateX(-2px); }}
+            40% {{ transform: translateX(2px); }}
+            60% {{ transform: translateX(-1px); }}
+            80% {{ transform: translateX(1px); }}
+            100% {{ transform: translateX(0); }}
+        }}
+        
+        @keyframes glitch-2 {{
+            0% {{ transform: translateX(0); }}
+            20% {{ transform: translateX(2px); }}
+            40% {{ transform: translateX(-2px); }}
+            60% {{ transform: translateX(1px); }}
+            80% {{ transform: translateX(-1px); }}
+            100% {{ transform: translateX(0); }}
+        }}
     </style>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
+    <div class="cyber-bg"></div>
+    <div class="grid-overlay"></div>
+    
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -442,131 +666,132 @@ def create_dashboard(df, main_proto_counter, full_proto_counter, ip_traffic_coun
                 <div class="logo">
                     <div class="logo-icon">🌐</div>
                     <div>
-                        <h1>NetScope</h1>
-                        <div class="subtitle">Advanced Network Traffic Analysis Platform</div>
+                        <h1 class="glitch" data-text="NETSCOPE">NETSCOPE</h1>
+                        <div class="tagline">// Advanced Network Analysis Terminal v2.0</div>
                     </div>
                 </div>
                 
-                <div class="analysis-info">
-                    <div class="info-item">
-                        <div class="info-label">PCAP File</div>
-                        <div class="info-value">{pcap_file}</div>
+                <div class="status-bar">
+                    <div class="status-item">
+                        <span class="status-label">Target File</span>
+                        <span class="status-value">{pcap_file}</span>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">Analysis Date</div>
-                        <div class="info-value">{datetime.now().strftime('%B %d, %Y at %H:%M:%S')}</div>
+                    <div class="status-item">
+                        <span class="status-label">Analysis Time</span>
+                        <span class="status-value">{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</span>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">Capture Period</div>
-                        <div class="info-value">{start_time} → {end_time}</div>
+                    <div class="status-item">
+                        <span class="status-label">Capture Window</span>
+                        <span class="status-value">{start_time} → {end_time}</span>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">Duration</div>
-                        <div class="info-value">{format_duration(duration)}</div>
+                    <div class="status-item">
+                        <span class="status-label">Duration</span>
+                        <span class="status-value">{format_duration(duration)}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Status</span>
+                        <span class="status-value" style="color: var(--accent);">● ANALYSIS COMPLETE</span>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Stats Cards -->
+        <!-- Stats Grid -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon">📦</div>
                 <div class="stat-label">Total Packets</div>
                 <div class="stat-value">{total_packets:,}</div>
-                <div class="stat-subvalue">Captured packets</div>
+                <div class="stat-subvalue">Captured frames analyzed</div>
             </div>
             
             <div class="stat-card">
                 <div class="stat-icon">💾</div>
-                <div class="stat-label">Total Data</div>
+                <div class="stat-label">Data Volume</div>
                 <div class="stat-value">{total_mb:.2f} MB</div>
-                <div class="stat-subvalue">{total_bytes:,} bytes</div>
+                <div class="stat-subvalue">{total_bytes:,} bytes processed</div>
             </div>
             
             <div class="stat-card">
                 <div class="stat-icon">🔀</div>
-                <div class="stat-label">Protocols Detected</div>
+                <div class="stat-label">Protocols</div>
                 <div class="stat-value">{len(main_proto_counter)}</div>
-                <div class="stat-subvalue">Unique protocol types</div>
+                <div class="stat-subvalue">Unique types detected</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon">🖥️</div>
-                <div class="stat-label">Source IPs</div>
+                <div class="stat-icon">📡</div>
+                <div class="stat-label">Source Nodes</div>
                 <div class="stat-value">{unique_src_ips}</div>
-                <div class="stat-subvalue">Unique source addresses</div>
+                <div class="stat-subvalue">Origin addresses</div>
             </div>
             
             <div class="stat-card">
                 <div class="stat-icon">🎯</div>
-                <div class="stat-label">Destination IPs</div>
+                <div class="stat-label">Target Nodes</div>
                 <div class="stat-value">{unique_dst_ips}</div>
-                <div class="stat-subvalue">Unique target addresses</div>
+                <div class="stat-subvalue">Destination addresses</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon">⚠️</div>
-                <div class="stat-label">Security Alerts</div>
-                <div class="stat-value">{len(suspicious_ips)}</div>
-                <div class="stat-subvalue">Suspicious IPs detected</div>
+                <div class="stat-icon">⚡</div>
+                <div class="stat-label">Threat Level</div>
+                <div class="stat-value" style="{'color: var(--danger);' if suspicious_ips else 'color: var(--accent);'}">{len(suspicious_ips)} ALERT{'S' if len(suspicious_ips) != 1 else ''}</div>
+                <div class="stat-subvalue">Security anomalies detected</div>
             </div>
         </div>
         
-        <!-- Content -->
-        <div class="content">
-            <!-- Security Alerts Section -->
-            <div class="section">
-                <h2 class="section-title">🚨 Security Analysis</h2>
-                <div class="alert-box">
-                    {generate_security_alerts_html(suspicious_ips, ip_traffic_counter)}
+        <!-- Security Analysis -->
+        <div class="section">
+            <h2 class="section-title">🚨 Threat Analysis Matrix</h2>
+            <div class="alert-box">
+                {generate_security_alerts_html(suspicious_ips, ip_traffic_counter)}
+            </div>
+        </div>
+        
+        <!-- Protocol Charts -->
+        <div class="section">
+            <h2 class="section-title">📊 Protocol Distribution Analysis</h2>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3 class="chart-title">Protocol Signature Map</h3>
+                    <div id="protocolPieChart"></div>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">Protocol Frequency Analysis</h3>
+                    <div id="protocolBarChart"></div>
                 </div>
             </div>
-            
-            <!-- Protocol Analysis Charts -->
-            <div class="section">
-                <h2 class="section-title">📊 Protocol Distribution Analysis</h2>
-                <div class="charts-grid">
-                    <div class="chart-container">
-                        <h3 class="chart-title">🎯 Protocol Distribution</h3>
-                        <div id="protocolPieChart"></div>
-                    </div>
-                    <div class="chart-container">
-                        <h3 class="chart-title">📈 Protocol Breakdown</h3>
-                        <div id="protocolBarChart"></div>
-                    </div>
+        </div>
+        
+        <!-- Traffic Analysis -->
+        <div class="section">
+            <h2 class="section-title">👥 Network Node Analysis</h2>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3 class="chart-title">Top Traffic Sources</h3>
+                    <div id="topTalkersChart"></div>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">Packet Size Distribution</h3>
+                    <div id="packetSizeChart"></div>
                 </div>
             </div>
-            
-            <!-- Traffic Analysis Charts -->
-            <div class="section">
-                <h2 class="section-title">👥 Traffic Volume Analysis</h2>
-                <div class="charts-grid">
-                    <div class="chart-container">
-                        <h3 class="chart-title">🔝 Top Talkers</h3>
-                        <div id="topTalkersChart"></div>
-                    </div>
-                    <div class="chart-container">
-                        <h3 class="chart-title">📏 Packet Size Distribution</h3>
-                        <div id="packetSizeChart"></div>
-                    </div>
-                </div>
+        </div>
+        
+        <!-- Traffic Table -->
+        <div class="section">
+            <h2 class="section-title">💬 Traffic Breakdown Matrix</h2>
+            <div class="table-container">
+                {generate_top_talkers_table(ip_traffic_counter)}
             </div>
-            
-            <!-- Top Talkers Table -->
-            <div class="section">
-                <h2 class="section-title">💬 Detailed Traffic Breakdown</h2>
-                <div class="table-container">
-                    {generate_top_talkers_table(ip_traffic_counter)}
-                </div>
-            </div>
-            
-            <!-- Protocol Details Table -->
-            <div class="section">
-                <h2 class="section-title">🔍 Protocol Details</h2>
-                <div class="table-container">
-                    {generate_protocol_table(main_proto_counter, full_proto_counter, total_packets)}
-                </div>
+        </div>
+        
+        <!-- Protocol Table -->
+        <div class="section">
+            <h2 class="section-title">🔍 Protocol Signature Database</h2>
+            <div class="table-container">
+                {generate_protocol_table(main_proto_counter, full_proto_counter, total_packets)}
             </div>
         </div>
         
@@ -574,43 +799,34 @@ def create_dashboard(df, main_proto_counter, full_proto_counter, ip_traffic_coun
         <div class="footer">
             <div class="footer-content">
                 <div class="footer-text">
-                    Generated by NetScope Traffic Analyzer | Powered by Python + Scapy + Plotly
+                    NETSCOPE NETWORK ANALYZER // PYTHON + SCAPY + PLOTLY
                 </div>
                 <div class="footer-badge">
-                    Advanced Network Analysis v2.0
+                    CYBER ANALYSIS v2.0
                 </div>
             </div>
         </div>
     </div>
     
     <script>
-        // Protocol Pie Chart
         {protocol_chart}
-        
-        // Top Talkers Chart
         {top_talkers_chart}
-        
-        // Packet Size Chart
         {packet_size_chart}
-        
-        // Protocol Bar Chart
         {protocol_bar_chart}
     </script>
 </body>
 </html>
 """
     
-    # Save dashboard
     output_file = os.path.join(output_dir, "dashboard.html")
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(html_content)
     
-    print(f"✓ HTML Dashboard created: {output_file}")
+    print(f"✓ Futuristic Dashboard created: {output_file}")
     return output_file
 
 
 def format_duration(seconds):
-    """Format duration in human-readable format"""
     if seconds < 60:
         return f"{seconds:.1f}s"
     elif seconds < 3600:
@@ -624,10 +840,10 @@ def generate_security_alerts_html(suspicious_ips, ip_traffic_counter):
     if not suspicious_ips:
         return '''
         <div class="no-alerts">
-            <span style="font-size: 48px;">✅</span>
-            <div>
-                <strong>No Security Threats Detected</strong><br>
-                <span style="font-size: 14px;">All traffic appears normal</span>
+            <div class="no-alerts-icon">🛡️</div>
+            <div class="no-alerts-text">System Secure // No Threats Detected</div>
+            <div style="margin-top: 10px; color: var(--text-dim); font-size: 14px;">
+                All network activity within normal parameters
             </div>
         </div>
         '''
@@ -642,8 +858,11 @@ def generate_security_alerts_html(suspicious_ips, ip_traffic_counter):
             <div class="alert-text">
                 <div class="alert-ip">{ip}</div>
                 <div class="alert-details">
-                    High traffic volume detected: {bytes_transferred:,} bytes ({mb_transferred:.2f} MB)
+                    Anomalous traffic volume: {bytes_transferred:,} bytes ({mb_transferred:.2f} MB)
                 </div>
+            </div>
+            <div style="font-family: 'Orbitron', sans-serif; font-size: 11px; color: var(--danger); text-transform: uppercase;">
+                HIGH TRAFFIC
             </div>
         </div>
         '''
@@ -659,10 +878,11 @@ def generate_top_talkers_table(ip_traffic_counter):
         <thead>
             <tr>
                 <th>Rank</th>
-                <th>IP Address</th>
-                <th>Bytes Transferred</th>
-                <th>Megabytes (MB)</th>
-                <th>Percentage</th>
+                <th>Node Address</th>
+                <th>Bytes</th>
+                <th>Volume (MB)</th>
+                <th>Traffic %</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -673,13 +893,17 @@ def generate_top_talkers_table(ip_traffic_counter):
     for idx, (ip, bytes_val) in enumerate(top_talkers, 1):
         mb = bytes_val / 1024 / 1024
         percentage = (bytes_val / total_bytes * 100) if total_bytes > 0 else 0
+        status_color = "var(--danger)" if percentage > 30 else "var(--warning)" if percentage > 15 else "var(--accent)"
+        status_text = "HIGH" if percentage > 30 else "MEDIUM" if percentage > 15 else "NORMAL"
+        
         html += f'''
         <tr>
-            <td><strong>#{idx}</strong></td>
+            <td><strong style="color: var(--primary);">#{idx:02d}</strong></td>
             <td><code>{ip}</code></td>
             <td>{bytes_val:,}</td>
-            <td>{mb:.2f} MB</td>
+            <td>{mb:.2f}</td>
             <td>{percentage:.1f}%</td>
+            <td style="color: {status_color}; font-family: 'Orbitron', sans-serif; font-size: 11px;">● {status_text}</td>
         </tr>
         '''
     
@@ -695,14 +919,13 @@ def generate_protocol_table(main_proto_counter, full_proto_counter, total_packet
             <tr>
                 <th>Protocol</th>
                 <th>Packet Count</th>
-                <th>Percentage</th>
-                <th>Sample Protocol Chain</th>
+                <th>Distribution</th>
+                <th>Layer Chain</th>
             </tr>
         </thead>
         <tbody>
     '''
     
-    # Create a mapping of main protocols to their full chains
     proto_chains = {}
     for chain, count in full_proto_counter.items():
         main = chain.split(' -> ')[-1] if ' -> ' in chain else chain
@@ -714,10 +937,10 @@ def generate_protocol_table(main_proto_counter, full_proto_counter, total_packet
         sample_chain = proto_chains.get(proto, proto)
         html += f'''
         <tr>
-            <td><strong>{proto}</strong></td>
+            <td><strong style="color: var(--primary);">{proto}</strong></td>
             <td>{count:,}</td>
             <td>{percentage:.1f}%</td>
-            <td><code>{sample_chain}</code></td>
+            <td><code style="font-size: 11px;">{sample_chain}</code></td>
         </tr>
         '''
     
@@ -726,7 +949,7 @@ def generate_protocol_table(main_proto_counter, full_proto_counter, total_packet
 
 
 def generate_protocol_pie_chart(proto_counter):
-    """Generate Plotly pie chart for protocols"""
+    """Generate Plotly pie chart for protocols - Cyberpunk style"""
     protocols = list(proto_counter.keys())
     counts = list(proto_counter.values())
     
@@ -735,21 +958,28 @@ def generate_protocol_pie_chart(proto_counter):
             'labels': protocols,
             'values': counts,
             'type': 'pie',
-            'hole': 0.4,
+            'hole': 0.5,
             'marker': {
-                'colors': ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140', '#30cfd0']
+                'colors': ['#00f0ff', '#ff00ff', '#00ff88', '#ffaa00', '#ff0055', '#8855ff', '#00ffcc', '#ff6600'],
+                'line': {'color': '#0a0a0f', 'width': 2}
             },
             'textinfo': 'label+percent',
-            'textfont': {'size': 12},
-            'hovertemplate': '<b>%{label}</b><br>Packets: %{value}<br>Percentage: %{percent}<extra></extra>'
+            'textfont': {'size': 11, 'family': 'Share Tech Mono', 'color': '#e0e0e0'},
+            'hovertemplate': '<b>%{label}</b><br>Packets: %{value:,}<br>Share: %{percent}<extra></extra>'
         }],
         'layout': {
             'height': 400,
-            'margin': {'t': 20, 'b': 20, 'l': 20, 'r': 20},
+            'margin': {'t': 10, 'b': 10, 'l': 10, 'r': 10},
             'paper_bgcolor': 'rgba(0,0,0,0)',
             'plot_bgcolor': 'rgba(0,0,0,0)',
             'showlegend': True,
-            'legend': {'orientation': 'v', 'x': 1, 'y': 0.5}
+            'legend': {
+                'orientation': 'v', 
+                'x': 1, 
+                'y': 0.5,
+                'font': {'family': 'Share Tech Mono', 'size': 11, 'color': '#e0e0e0'}
+            },
+            'font': {'family': 'Share Tech Mono', 'color': '#e0e0e0'}
         }
     }
     
@@ -757,7 +987,7 @@ def generate_protocol_pie_chart(proto_counter):
 
 
 def generate_protocol_bar_chart(proto_counter):
-    """Generate Plotly bar chart for protocols"""
+    """Generate Plotly bar chart for protocols - Cyberpunk style"""
     protocols = list(proto_counter.keys())
     counts = list(proto_counter.values())
     
@@ -768,20 +998,33 @@ def generate_protocol_bar_chart(proto_counter):
             'type': 'bar',
             'marker': {
                 'color': counts,
-                'colorscale': 'Viridis',
-                'showscale': False
+                'colorscale': [[0, '#00f0ff'], [0.5, '#ff00ff'], [1, '#00ff88']],
+                'line': {'color': '#00f0ff', 'width': 1}
             },
             'text': counts,
             'textposition': 'outside',
-            'hovertemplate': '<b>%{x}</b><br>Packets: %{y}<extra></extra>'
+            'textfont': {'family': 'Orbitron', 'size': 11, 'color': '#00f0ff'},
+            'hovertemplate': '<b>%{x}</b><br>Packets: %{y:,}<extra></extra>'
         }],
         'layout': {
             'height': 400,
-            'margin': {'t': 20, 'b': 80, 'l': 60, 'r': 20},
+            'margin': {'t': 30, 'b': 80, 'l': 60, 'r': 20},
             'paper_bgcolor': 'rgba(0,0,0,0)',
             'plot_bgcolor': 'rgba(0,0,0,0)',
-            'xaxis': {'title': 'Protocol', 'tickangle': -45},
-            'yaxis': {'title': 'Packet Count', 'gridcolor': '#e2e8f0'},
+            'xaxis': {
+                'title': {'text': 'Protocol', 'font': {'family': 'Share Tech Mono', 'color': '#6a7a8a'}},
+                'tickangle': -45,
+                'tickfont': {'family': 'Share Tech Mono', 'color': '#e0e0e0'},
+                'gridcolor': 'rgba(0, 240, 255, 0.1)',
+                'linecolor': 'rgba(0, 240, 255, 0.3)'
+            },
+            'yaxis': {
+                'title': {'text': 'Packet Count', 'font': {'family': 'Share Tech Mono', 'color': '#6a7a8a'}},
+                'tickfont': {'family': 'Share Tech Mono', 'color': '#e0e0e0'},
+                'gridcolor': 'rgba(0, 240, 255, 0.1)',
+                'linecolor': 'rgba(0, 240, 255, 0.3)'
+            },
+            'font': {'family': 'Share Tech Mono', 'color': '#e0e0e0'}
         }
     }
     
@@ -789,7 +1032,7 @@ def generate_protocol_bar_chart(proto_counter):
 
 
 def generate_top_talkers_chart(ip_traffic_counter):
-    """Generate Plotly bar chart for top talkers"""
+    """Generate Plotly bar chart for top talkers - Cyberpunk style"""
     top_talkers = ip_traffic_counter.most_common(10)
     ips = [ip for ip, _ in top_talkers]
     mbs = [bytes_val / 1024 / 1024 for _, bytes_val in top_talkers]
@@ -802,20 +1045,31 @@ def generate_top_talkers_chart(ip_traffic_counter):
             'orientation': 'h',
             'marker': {
                 'color': mbs,
-                'colorscale': 'Portland',
-                'showscale': False
+                'colorscale': [[0, '#00ff88'], [0.5, '#00f0ff'], [1, '#ff00ff']],
+                'line': {'color': '#00f0ff', 'width': 1}
             },
             'text': [f"{mb:.2f} MB" for mb in mbs],
             'textposition': 'outside',
+            'textfont': {'family': 'Orbitron', 'size': 10, 'color': '#00f0ff'},
             'hovertemplate': '<b>%{y}</b><br>%{x:.2f} MB<extra></extra>'
         }],
         'layout': {
             'height': 400,
-            'margin': {'t': 20, 'b': 40, 'l': 120, 'r': 80},
+            'margin': {'t': 10, 'b': 40, 'l': 130, 'r': 70},
             'paper_bgcolor': 'rgba(0,0,0,0)',
             'plot_bgcolor': 'rgba(0,0,0,0)',
-            'xaxis': {'title': 'Data (MB)', 'gridcolor': '#e2e8f0'},
-            'yaxis': {'title': '', 'autorange': 'reversed'},
+            'xaxis': {
+                'title': {'text': 'Data Volume (MB)', 'font': {'family': 'Share Tech Mono', 'color': '#6a7a8a'}},
+                'tickfont': {'family': 'Share Tech Mono', 'color': '#e0e0e0'},
+                'gridcolor': 'rgba(0, 240, 255, 0.1)',
+                'linecolor': 'rgba(0, 240, 255, 0.3)'
+            },
+            'yaxis': {
+                'tickfont': {'family': 'Share Tech Mono', 'size': 11, 'color': '#e0e0e0'},
+                'autorange': 'reversed',
+                'linecolor': 'rgba(0, 240, 255, 0.3)'
+            },
+            'font': {'family': 'Share Tech Mono', 'color': '#e0e0e0'}
         }
     }
     
@@ -823,7 +1077,7 @@ def generate_top_talkers_chart(ip_traffic_counter):
 
 
 def generate_packet_size_chart(df):
-    """Generate Plotly histogram for packet sizes"""
+    """Generate Plotly histogram for packet sizes - Cyberpunk style"""
     if df.empty or 'length' not in df.columns:
         return "// No packet size data"
     
@@ -835,19 +1089,30 @@ def generate_packet_size_chart(df):
             'type': 'histogram',
             'nbinsx': 50,
             'marker': {
-                'color': '#667eea',
-                'line': {'color': 'white', 'width': 1}
+                'color': 'rgba(0, 240, 255, 0.7)',
+                'line': {'color': '#00f0ff', 'width': 1}
             },
             'hovertemplate': 'Size: %{x} bytes<br>Count: %{y}<extra></extra>'
         }],
         'layout': {
             'height': 400,
-            'margin': {'t': 20, 'b': 60, 'l': 60, 'r': 20},
+            'margin': {'t': 10, 'b': 60, 'l': 60, 'r': 20},
             'paper_bgcolor': 'rgba(0,0,0,0)',
             'plot_bgcolor': 'rgba(0,0,0,0)',
-            'xaxis': {'title': 'Packet Size (bytes)', 'gridcolor': '#e2e8f0'},
-            'yaxis': {'title': 'Frequency', 'gridcolor': '#e2e8f0'},
-            'bargap': 0.1
+            'xaxis': {
+                'title': {'text': 'Packet Size (bytes)', 'font': {'family': 'Share Tech Mono', 'color': '#6a7a8a'}},
+                'tickfont': {'family': 'Share Tech Mono', 'color': '#e0e0e0'},
+                'gridcolor': 'rgba(0, 240, 255, 0.1)',
+                'linecolor': 'rgba(0, 240, 255, 0.3)'
+            },
+            'yaxis': {
+                'title': {'text': 'Frequency', 'font': {'family': 'Share Tech Mono', 'color': '#6a7a8a'}},
+                'tickfont': {'family': 'Share Tech Mono', 'color': '#e0e0e0'},
+                'gridcolor': 'rgba(0, 240, 255, 0.1)',
+                'linecolor': 'rgba(0, 240, 255, 0.3)'
+            },
+            'bargap': 0.05,
+            'font': {'family': 'Share Tech Mono', 'color': '#e0e0e0'}
         }
     }
     
